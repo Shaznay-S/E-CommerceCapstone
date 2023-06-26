@@ -44,4 +44,92 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
         }
     }
 
+    @Override
+    public Profile getById(int userId)
+    {
+        String sql = "SELECT * FROM profiles WHERE user_id = ?";
+        try (Connection connection = getConnection()){
+
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setInt(1, userId);
+
+            ResultSet rs = ps. executeQuery();
+
+            while (rs.next()){
+                System.out.println(rs.getString("first_name"));
+                System.out.println(rs.getString("last_name"));
+                System.out.println(rs.getString("phone"));
+                System.out.println(rs.getString("email"));
+                System.out.println(rs.getString("address"));
+                System.out.println(rs.getString("city"));
+                System.out.println(rs.getString("state"));
+                System.out.println(rs.getString("zip"));
+            }
+        }catch(SQLException sqlException){
+            sqlException.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+    @Override
+    public Profile updateProfile(int userId, Profile profile)
+    {
+        String sql = "UPDATE profiles " +
+                "SET first_name = ? " +
+                "SET last_name = ? " +
+                "SET phone = ? " +
+                "SET email = ? " +
+                "SET address = ? " +
+                "SET city = ? " +
+                "SET state = ? " +
+                "SET zip = ? " +
+                "WHERE user_id = ?;";
+
+        try (Connection connection = getConnection()) {
+
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setString(1, profile.getFirstName());
+            ps.setString(2, profile.getLastName());
+            ps.setString(3, profile.getPhone());
+            ps.setString(4, profile.getEmail());
+            ps.setString(5, profile.getAddress());
+            ps.setString(6, profile.getCity());
+            ps.setString(7, profile.getState());
+            ps.setString(8, profile.getZip());
+            ps.setInt(9, userId);
+
+            ps.executeUpdate();
+
+        }catch(SQLException sqlException){
+            sqlException.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+    @Override
+    public void deleteProfile(int userId)
+    {
+        String sql = "DELETE FROM profiles " +
+                "WHERE user_id = ?";
+
+        try(Connection connection = getConnection()){
+
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setInt(1, userId);
+
+            ps.executeUpdate();
+
+        }catch(SQLException sqlException){
+            sqlException.printStackTrace();
+        }
+
+    }
+
 }
