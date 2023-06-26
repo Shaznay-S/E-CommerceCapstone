@@ -57,14 +57,14 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
             ResultSet rs = ps. executeQuery();
 
             while (rs.next()){
-                System.out.println(rs.getString("first_name"));
-                System.out.println(rs.getString("last_name"));
-                System.out.println(rs.getString("phone"));
-                System.out.println(rs.getString("email"));
-                System.out.println(rs.getString("address"));
-                System.out.println(rs.getString("city"));
-                System.out.println(rs.getString("state"));
-                System.out.println(rs.getString("zip"));
+                rs.getString("first_name");
+                rs.getString("last_name");
+                rs.getString("phone");
+                rs.getString("email");
+                rs.getString("address");
+                rs.getString("city");
+                rs.getString("state");
+                rs.getString("zip");
             }
         }catch(SQLException sqlException){
             sqlException.printStackTrace();

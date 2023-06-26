@@ -22,11 +22,13 @@ public class ProfileController {
 
     @PostMapping("")
     @PreAuthorize("permitAll()")
+    @ResponseStatus(value = HttpStatus.CREATED)
     public Profile createProfile (@RequestBody Profile profile)
     {
         try {
 
             profileDao.create(profile);
+            return profile;
 
         }catch(Exception e){
 
@@ -34,21 +36,22 @@ public class ProfileController {
 
         }
 
-        return null;
-
     }
 
 
     @GetMapping("{id}")
     @PreAuthorize("permitAll()")
-    public Profile getById (@PathVariable int userId)
+    public Profile getById (@PathVariable int id)
     {
         try{
 
-            var profile = profileDao.getById(userId);
+            var profile = profileDao.getById(id);
 
-            if (profile == null)
+            if (profile == null) {
+
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+            }
 
             return profile;
 
@@ -61,11 +64,13 @@ public class ProfileController {
 
     @PutMapping("{id}")
     @PreAuthorize("permitAll()")
-    public Profile updateProfile(@PathVariable int userId, @RequestBody Profile profile)
+    public Profile updateProfile(@PathVariable int id, @RequestBody Profile profile)
     {
         try{
 
-            profileDao.updateProfile(userId, profile);
+            profileDao.updateProfile(id, profile);
+
+            return profile;
 
         }catch(Exception e){
 
@@ -73,22 +78,20 @@ public class ProfileController {
 
         }
 
-        return null;
-
     }
 
     @DeleteMapping("{id}")
     @PreAuthorize("permitAll()")
-    public void deleteProfile(@PathVariable int userId)
+    public void deleteProfile(@PathVariable int id)
     {
         try {
 
-            var profile = profileDao.getById(userId);
+            var profile = profileDao.getById(id);
 
             if (profile == null)
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-            profileDao.deleteProfile(userId);
+            profileDao.deleteProfile(id);
 
         }catch(Exception e){
 
