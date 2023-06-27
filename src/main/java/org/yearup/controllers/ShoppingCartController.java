@@ -1,5 +1,6 @@
 package org.yearup.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,35 +12,43 @@ import org.yearup.models.ShoppingCart;
 import org.yearup.models.ShoppingCartItem;
 import org.yearup.models.User;
 import java.security.Principal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import static java.sql.DriverManager.getConnection;
 
 @RestController
-@RequestMapping("/cart")
+@RequestMapping("cart")
+@CrossOrigin
 //@PreAuthorize("is authenticated")
 public class ShoppingCartController {
     private ShoppingCartDao shoppingCartDao;
     private UserDao userDao;
     private ProductDao productDao;
 
+    @Autowired
     public ShoppingCartController(ShoppingCartDao shoppingCartDao, UserDao userDao, ProductDao productDao) {
         this.shoppingCartDao = shoppingCartDao;
         this.userDao = userDao;
         this.productDao = productDao;
     }
 
-    @GetMapping
+    @GetMapping("")
     public ShoppingCart getCart(Principal principal) {
         try {
             String userName = principal.getName();
             User user = userDao.getByUserName(userName);
             int userId = user.getId();
-            ShoppingCart cart;
-            cart = shoppingCartDao.getByUserId(userId);
-            return cart;
+
+            return this.shoppingCartDao.getByUserId(userId);
+
         } catch (Exception e) {
-//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
-            e.printStackTrace();
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
         }
-        return null;
+
     }
 
     @PostMapping("/products/{productId}")
@@ -62,6 +71,7 @@ public class ShoppingCartController {
             }
             shoppingCartDao.saveCart(userId, productId, item.getQuantity());
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
         }
     }
