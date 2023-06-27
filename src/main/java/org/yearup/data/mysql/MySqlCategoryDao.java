@@ -15,160 +15,174 @@ import java.util.List;
 @Component
 public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
 
+    // Constructor
     public MySqlCategoryDao(DataSource dataSource) {
         super(dataSource);
     }
 
+    // Retrieve all categories
     @Override
     public List<Category> getAllCategories() {
-        // Create an empty list to store the categories
-        List<Category> categories = new ArrayList<>();
+        List<Category> CategoryList = new ArrayList<>();
 
-        try (Connection connection = getConnection();
-             // Prepare the SQL statement to select all categories
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM categories");
-             // Execute the SQL statement and get the result set
-             ResultSet resultSet = statement.executeQuery()) {
+        // SQL query to retrieve all categories
+        String query = "SELECT * FROM categories";
 
-            while (resultSet.next()) {
-                // Create a Category object by mapping the current row of the result set
-                Category category = mapRow(resultSet);
-                // Add the category to the list
-                categories.add(category);
+        try(Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Execute the SQL query and retrieve the result set
+            try(ResultSet set = preparedStatement.executeQuery()) {
+
+                // Iterate through each row in the result set
+                while(set.next()) {
+
+                    // Create a Category object with data from the current row
+                    Category category = new Category(
+                            set.getInt("category_id"),
+                            set.getString("name"),
+                            set.getString("description")
+                    );
+
+                    // Add the category to the list
+                    CategoryList.add(category);
+                }
             }
-        } catch (SQLException e) {
-            // Throw a runtime exception if there is an error retrieving categories from the database
-            throw new RuntimeException("Failed to retrieve categories from the database.", e);
+        }
+        catch(SQLException sqlException) {
+            sqlException.printStackTrace();
         }
 
         // Return the list of categories
-        return categories;
+        return CategoryList;
     }
 
+    // Retrieve a category by its ID
     @Override
     public Category getById(int categoryId) {
-        try (Connection connection = getConnection();
-             // Prepare the SQL statement to select a category by ID
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM categories WHERE category_id = ?")) {
+        String query = "SELECT * FROM categories WHERE category_id = ?";
+        Category category = new Category();
+
+        try(Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Set the category_id parameter in the prepared statement
-            statement.setInt(1, categoryId);
+            preparedStatement.setInt(1, categoryId);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    // Create a Category object by mapping the current row of the result set
-                    return mapRow(resultSet);
+            // Execute the SQL query and retrieve the result set
+            try(ResultSet set = preparedStatement.executeQuery()) {
+
+                // If a category is found, create a Category object with the data from the result set
+                if(set.next()) {
+                    category = new Category(
+                            set.getInt("category_id"),
+                            set.getString("name"),
+                            set.getString("description")
+                    );
                 }
             }
-        } catch (SQLException e) {
-            // Throw a runtime exception if there is an error retrieving a category from the database
-            throw new RuntimeException("Failed to retrieve category from the database.", e);
+        }
+        catch (SQLException sqlException) {
+            sqlException.printStackTrace();
         }
 
-        // Throw a runtime exception if the category is not found
-        throw new RuntimeException("Category not found for the given category ID: " + categoryId);
+        // Return the category
+        return category;
     }
 
+    // Create a new category
     @Override
     public Category create(Category category) {
-        try (Connection connection = getConnection();
-             // Prepare the SQL statement to insert a new category
-             PreparedStatement statement = connection.prepareStatement(
-                     "INSERT INTO categories (name, description) VALUES (?, ?)",
-                     PreparedStatement.RETURN_GENERATED_KEYS)) {
+        String query = "INSERT INTO categories(name, description) VALUES (?, ?);";
 
-            // Set the values for the name and description parameters in the prepared statement
-            statement.setString(1, category.getName());
-            statement.setString(2, category.getDescription());
+        try(Connection connection = getConnection()) {
 
-            // Execute the SQL statement and get the number of affected rows
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0) {
-                // Throw a runtime exception if the insertion failed
-                throw new RuntimeException("Failed to create category in the database.");
-            }
+            // Create a prepared statement for the SQL query
+            PreparedStatement preparedStatement = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            // Set the values for the parameters in the prepared statement
+            preparedStatement.setString(1, category.getName());
+            preparedStatement.setString(2, category.getDescription());
+
+            // Execute the SQL query and retrieve the number of affected rows
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // If insertion is successful, retrieve the auto-generated ID and return the newly inserted category
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    // Get the auto-generated category ID and set it in the category object
-                    int generatedCategoryId = generatedKeys.getInt(1);
-                    category.setCategoryId(generatedCategoryId);
-                    return category;
+                    int orderId = generatedKeys.getInt(1);
+                    return getById(orderId);
                 }
             }
-        } catch (SQLException e) {
-            // Throw a runtime exception if there is an error creating a category in the database
-            throw new RuntimeException("Failed to create category in the database.", e);
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
         }
 
-        // Throw a runtime exception if the auto-generated category ID cannot be retrieved
-        throw new RuntimeException("Failed to retrieve the auto-generated category ID.");
+        // Return null if category creation fails
+        return null;
     }
 
+    // Update a category
     @Override
     public void update(int categoryId, Category category) {
-        // Prepare the SQL statement to update a category by ID
-        String sql = "UPDATE categories " +
-                "SET name = ?, description = ? " +
-                "WHERE category_id = ?;";
+        String sql = "UPDATE categories SET name = ?, description = ? WHERE category_id = ?;";
 
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection()) {
 
-            // Set the values for the name, description, and category_id parameters in the prepared statement
+            // Create a prepared statement for the SQL query
+            PreparedStatement statement = connection.prepareStatement(sql);
+
+            // Set the values for the parameters in the prepared statement
             statement.setString(1, category.getName());
             statement.setString(2, category.getDescription());
             statement.setInt(3, categoryId);
 
-            // Execute the SQL statement and get the number of affected rows
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0) {
-                // Throw a runtime exception if the update failed
-                throw new RuntimeException("Failed to update category in the database.");
-            }
-        } catch (SQLException e) {
-            // Throw a runtime exception if there is an error updating a category in the database
-            throw new RuntimeException("Failed to update category in the database.", e);
+            // Execute the update query
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    // Delete a category by its ID
     @Override
     public void delete(int categoryId) {
-        // Prepare the SQL statement to delete a category by ID
-        String sql = "DELETE FROM categories " +
-                "WHERE category_id = ?;";
+        String sql = "DELETE FROM categories WHERE category_id = ?;";
 
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection()) {
 
-            // Set the category_id parameter in the prepared statement
+            // Create a prepared statement for the SQL query
+            PreparedStatement statement = connection.prepareStatement(sql);
+
+            // Set the value for the parameter in the prepared statement
             statement.setInt(1, categoryId);
 
-            // Execute the SQL statement and get the number of affected rows
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0) {
-                // Throw a runtime exception if the deletion failed
-                throw new RuntimeException("Failed to delete category from the database.");
-            }
-        } catch (SQLException e) {
-            // Throw a runtime exception if there is an error deleting a category from the database
-            throw new RuntimeException("Failed to delete category from the database.", e);
+            // Execute the delete query
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    // Map a row from the result set to a Category object
     private Category mapRow(ResultSet row) throws SQLException {
-        // Retrieve the values from the current row of the result set
         int categoryId = row.getInt("category_id");
         String name = row.getString("name");
         String description = row.getString("description");
 
-        // Create a new Category object and set its properties
-        Category category = new Category();
-        category.setCategoryId(categoryId);
-        category.setName(name);
-        category.setDescription(description);
+        // Create a new Category object with the retrieved data
+        Category category = new Category() {{
+            setCategoryId(categoryId);
+            setName(name);
+            setDescription(description);
+        }};
 
+        // Return the Category object
         return category;
     }
-}
 
+}
