@@ -14,6 +14,4 @@ public interface ShoppingCartDao {
 
     void addToCart(int userId, int productId, ShoppingCartItem item);
 
-
-
 }
