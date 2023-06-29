@@ -8,7 +8,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.yearup.data.ProfileDao;
+import org.yearup.data.UserDao;
 import org.yearup.models.Profile;
+import org.yearup.models.User;
 
 import java.security.Principal;
 
@@ -18,23 +20,24 @@ import java.security.Principal;
 public class ProfileController {
 
     private ProfileDao profileDao;
+    private UserDao userDao;
 
     @Autowired
-    public ProfileController(ProfileDao profileDao) {
+    public ProfileController(ProfileDao profileDao, UserDao userDao) {
         this.profileDao = profileDao;
+        this.userDao = userDao;
     }
 
     @PostMapping("")
     @PreAuthorize("permitAll()")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public Profile createProfile (@RequestBody Profile profile)
-    {
+    public Profile createProfile(@RequestBody Profile profile) {
         try {
 
             profileDao.create(profile);
             return profile;
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
 
@@ -42,12 +45,10 @@ public class ProfileController {
 
     }
 
-
     @GetMapping("{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public Profile getById (@PathVariable int id)
-    {
-        try{
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
+    public Profile getById(@PathVariable int id, Authentication authentication) {
+        try {
 
             var profile = profileDao.getById(id);
 
@@ -59,12 +60,38 @@ public class ProfileController {
 
             return profile;
 
-        }catch(Exception e){
+        } catch (Exception e) {
 
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
 
         }
     }
+
+//    @GetMapping("{id}")
+//    public Profile getById(@PathVariable int id, Authentication authentication) {
+//        User authenticatedUser = userDao.getUserById(id);
+//
+//        if (authenticatedUser != null) {
+//            boolean isAdmin = authenticatedUser.getAuthorities().stream()
+//                    .anyMatch(authority -> authority.getName().equals("ROLE_ADMIN"));
+//
+//            if (isAdmin || authenticatedUser.getId() == id) {
+//                Profile profile = profileDao.getById(id);
+//
+//                if (profile == null) {
+//                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+//                }
+//                return profile;
+//            } else {
+//                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this profile");
+//            }
+//        } else {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged in to access a profile");
+//        }
+//    }
+
+
+
 
     @PutMapping("{id}")
     @PreAuthorize("permitAll()")
