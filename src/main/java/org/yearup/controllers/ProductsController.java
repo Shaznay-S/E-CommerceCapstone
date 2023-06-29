@@ -14,8 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("products")
 @CrossOrigin
-public class ProductsController
-{
+public class ProductsController {
     private ProductDao productDao;
 
     @Autowired
@@ -58,6 +57,7 @@ public class ProductsController
         catch(Exception ex)
         {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+
         }
     }
 
@@ -73,6 +73,22 @@ public class ProductsController
         {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
         }
+    }
+
+    public List<Product> listByCategoryId(int categoryId) {
+        return productDao.listByCategoryId(categoryId);
+    }
+
+    public Product create(Product product) {
+        return productDao.create(product);
+    }
+
+    public void update(int productId, Product product) {
+        productDao.update(productId, product);
+    }
+
+    public void delete(int productId) {
+        productDao.delete(productId);
     }
 
     @PutMapping("{id}")
