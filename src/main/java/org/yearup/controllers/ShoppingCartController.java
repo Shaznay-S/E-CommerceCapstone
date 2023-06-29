@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.yearup.data.ProductDao;
 import org.yearup.data.ShoppingCartDao;
 import org.yearup.data.UserDao;
+import org.yearup.models.Product;
 import org.yearup.models.ShoppingCart;
 import org.yearup.models.ShoppingCartItem;
 import org.yearup.models.User;
@@ -41,35 +42,44 @@ public class ShoppingCartController {
             String userName = principal.getName();
             User user = userDao.getByUserName(userName);
             int userId = user.getId();
-
             return this.shoppingCartDao.getByUserId(userId);
-
         } catch (Exception e) {
-
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
         }
-
     }
 
     @PostMapping("/products/{productId}")
+    @PreAuthorize("isAuthenticated()")
     public void addToCart(Principal principal, @PathVariable int productId) {
         try {
-            String userName = principal.getName();
-            User user = userDao.getByUserName(userName);
-            int userId = user.getId();
-            ShoppingCart cart = shoppingCartDao.getByUserId(userId);
-            if (cart == null) {
-                cart = new ShoppingCart();
-            }
-            ShoppingCartItem item = cart.get(productId);
-            if (item == null) {
-                item = new ShoppingCartItem();
-                item.setQuantity(1);
-                cart.add(item);
+            if (principal != null) {
+                String userName = principal.getName();
+                User user = userDao.getByUserName(userName);
+                int userId = user.getId();
+                ShoppingCart cart = shoppingCartDao.getByUserId(userId);
+                if (cart == null) {
+                    cart = new ShoppingCart();
+                }
+                ShoppingCartItem item = cart.get(productId);
+                if (item == null) {
+                    item = new ShoppingCartItem();
+                    item.setQuantity(1);
+                    // Retrieve the product using the ProductDao
+                    Product product = productDao.getById(productId);
+                    if (product != null) {
+                        // Set the retrieved product in the ShoppingCartItem
+                        item.setProduct(product);
+                        cart.add(item);
+                    } else {
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found.");
+                    }
+                } else {
+                    item.setQuantity(item.getQuantity() + 1);
+                }
+                shoppingCartDao.saveCart(userId, productId, item.getQuantity());
             } else {
-                item.setQuantity(item.getQuantity() + 1);
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated.");
             }
-            shoppingCartDao.saveCart(userId, productId, item.getQuantity());
         } catch (Exception e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
