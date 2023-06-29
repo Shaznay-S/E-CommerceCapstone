@@ -18,73 +18,75 @@ import java.util.List;
 @CrossOrigin
 public class CategoriesController {
 
+    // Controller class responsible for handling HTTP requests related to categories
     private CategoryDao categoryDao;
     private ProductDao productDao;
 
     @Autowired
-    // Constructor injection of CategoryDao and ProductDao
-    public CategoriesController(CategoryDao CategoryDao , ProductDao ProductDao){
-        this.categoryDao = CategoryDao;
-        this.productDao = ProductDao;
+    public CategoriesController(CategoryDao categoryDao, ProductDao productDao) {
+        // Constructor injection of CategoryDao and ProductDao
+        this.categoryDao = categoryDao;
+        this.productDao = productDao;
     }
 
     @GetMapping("")
-    // Handle HTTP GET request to retrieve all categories
     public List<Category> getAll() {
+        // Retrieve all categories from the database
         return this.categoryDao.getAllCategories();
     }
 
     @GetMapping("{id}")
-    // Handle HTTP GET request to retrieve a category by its ID
     public Category getById(@PathVariable int id) {
+        // Retrieve a specific category by its ID
         return this.categoryDao.getById(id);
     }
 
-    // Handle HTTP GET request to retrieve all products in a specific category by category ID
     @GetMapping("{categoryId}/products")
     public List<Product> getProductsById(@PathVariable int categoryId) {
+        // Retrieve all products in a specific category by category ID
         return this.productDao.listByCategoryId(categoryId);
     }
 
     @PostMapping()
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    // Handle HTTP POST request to add a new category
     public Category addCategory(@RequestBody Category category) {
+        // Add a new category to the database
         try {
             return categoryDao.create(category);
         } catch (Exception ex) {
-            // Handle any exceptions and return an appropriate HTTP response status
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+            // Handle exceptions and return appropriate HTTP response status
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR");
         }
     }
 
     @PutMapping("{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    // Handle HTTP PUT request to update a category by its ID
     public void updateCategory(@PathVariable int id, @RequestBody Category category) {
+        // Update a category by its ID
         try {
             categoryDao.update(id, category);
         } catch (Exception ex) {
-            // Handle any exceptions and return an appropriate HTTP response status
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+            // Handle exceptions and return appropriate HTTP response status
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR");
         }
     }
 
     @DeleteMapping("{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    // Handle HTTP DELETE request to delete a category by its ID
     public void deleteCategory(@PathVariable int id) {
+        // Delete a category by its ID
         try {
             var product = categoryDao.getById(id);
 
             if (product == null)
-                // If the category is not found, return an appropriate HTTP response status
+                // Return appropriate HTTP response status if category is not found
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
             categoryDao.delete(id);
         } catch (Exception ex) {
-            // Handle any exceptions and return an appropriate HTTP response status
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+            // Handle exceptions and return appropriate HTTP response status
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR");
         }
     }
+
 }
