@@ -3,6 +3,7 @@ package org.yearup.data.mysql;
 import org.springframework.stereotype.Component;
 import org.yearup.models.Product;
 import org.yearup.data.ProductDao;
+import org.yearup.models.User;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -90,13 +91,13 @@ public class MySqlProductDao extends MySqlDaoBase implements ProductDao
 
 
     @Override
-    public Product getById(int productId)
+    public Product getById(int ProductId)
     {
         String sql = "SELECT * FROM products WHERE product_id = ?";
         try (Connection connection = getConnection())
         {
             PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, productId);
+            statement.setInt(1, ProductId);
 
             ResultSet row = statement.executeQuery();
 
