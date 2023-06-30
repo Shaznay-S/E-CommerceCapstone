@@ -7,5 +7,6 @@ public interface ItemDao {
     void createItem(int orderId, ShoppingCartItem item);
     void updateItem(int orderId, ShoppingCartItem item);
     void deleteItem(int orderId, int productId);
+//    ShoppingCartItem getById(int productId);
 
 }

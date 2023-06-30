@@ -52,7 +52,8 @@ public class OrdersController {
 //                                    @RequestParam("address") String address,
 //                                    @RequestParam("city") String city,
 //                                    @RequestParam("state") String state,
-//                                    @RequestParam("zip") String zip){
+//                                    @RequestParam("zip") String zip,
+//                                    @RequestParam("date") Date date){
 //
 //        Profile profile = profileDao.getById(userId);
 //
@@ -60,7 +61,7 @@ public class OrdersController {
 //
 //        Order order = new Order();
 //        order.setProfile(profile);
-//        order.setOrderDate(new Date());
+//        order.setOrderDate(date);
 //        order.setCart(cart);
 //
 //        profile.setAddress(address);

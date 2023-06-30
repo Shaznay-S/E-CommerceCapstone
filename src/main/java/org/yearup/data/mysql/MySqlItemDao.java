@@ -3,11 +3,13 @@ package org.yearup.data.mysql;
 import org.springframework.stereotype.Component;
 import org.yearup.data.ItemDao;
 import org.yearup.models.Order;
+import org.yearup.models.Profile;
 import org.yearup.models.ShoppingCartItem;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @Component
@@ -62,6 +64,37 @@ public class MySqlItemDao extends MySqlDaoBase implements ItemDao {
 
         }
     }
+
+//    @Override
+//    public ShoppingCartItem getById(int productId){
+//        String sql = "SELECT * FROM order_line_items WHERE order_line_item_id = ?";
+//
+//        try (Connection connection = getConnection();
+//             PreparedStatement ps = connection.prepareStatement(sql)) {
+//
+//            ps.setInt(1, productId);
+//            ResultSet rs = ps.executeQuery();
+//
+//            if (rs.next()) {
+//                ShoppingCartItem item = new ShoppingCartItem();
+//                item.setUserId(rs.getInt("user_id"));
+//                item.setFirstName(rs.getString("first_name"));
+//                profile.setLastName(rs.getString("last_name"));
+//                profile.setPhone(rs.getString("phone"));
+//                profile.setEmail(rs.getString("email"));
+//                profile.setAddress(rs.getString("address"));
+//                profile.setCity(rs.getString("city"));
+//                profile.setState(rs.getString("state"));
+//                profile.setZip(rs.getString("zip"));
+//
+//                return item;
+//            }
+//        } catch (SQLException sqlException) {
+//            sqlException.printStackTrace();
+//        }
+//
+//        return null;
+//    }
 
     @Override
     public void deleteItem(int orderId, int productId){

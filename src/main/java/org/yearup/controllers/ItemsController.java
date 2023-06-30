@@ -22,16 +22,17 @@ public class ItemsController {
         this.cartDao = cartDao;
     }
 
-//    @PostMapping("cart/items")
-//    public String addItemToCart(@RequestParam("userId") int userId,
-//                                @RequestParam("productId") int productId,
-//                                @RequestParam("quantity") int quantity){
-//        ShoppingCart cart = cartDao.getByUserId(userId);
-//        cart.add(productId, quantity);
-//
-//        return "redirect:/shoppingCart";
-//    }
-//
+    @PostMapping("cart/items")
+    public String addItemToCart(@RequestParam("userId") int userId,
+                                @RequestParam("productId") int productId,
+                                @RequestParam("quantity") int quantity,
+                                @RequestParam ShoppingCartItem item){
+        ShoppingCart cart = cartDao.getByUserId(userId);
+        cart.add(item);
+
+        return "redirect:/shoppingCart";
+    }
+
 //    @PostMapping("cart/items/{productId}/quantity")
 //    public String updateItemQuantity(@PathVariable("productId") int productId,
 //                                     @RequestParam("quantity") int quantity){
@@ -44,7 +45,7 @@ public class ItemsController {
 //
 //        return "redirect:/shoppingCart";
 //    }
-//
+
 //    @GetMapping("/cart/items/{productId}/delete")
 //    public String deleteItem(@PathVariable("productId") int productId){
 //        itemDao.deleteItem(productId);
