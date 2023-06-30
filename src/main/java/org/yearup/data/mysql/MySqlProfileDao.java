@@ -6,6 +6,7 @@ import org.yearup.data.ProfileDao;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Optional;
 
 @Component
 public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
@@ -49,14 +50,13 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
     {
         String sql = "SELECT * FROM profiles WHERE user_id = ?";
 
-        try (Connection connection = getConnection()) {
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
-            PreparedStatement ps = connection.prepareStatement(sql);
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 Profile profile = new Profile();
                 profile.setUserId(rs.getInt("user_id"));
                 profile.setFirstName(rs.getString("first_name"));
@@ -69,13 +69,9 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
                 profile.setZip(rs.getString("zip"));
 
                 return profile;
-
             }
-
         } catch (SQLException sqlException) {
-
             sqlException.printStackTrace();
-
         }
 
         return null;
@@ -95,9 +91,10 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
                 "zip = ? " +
                 "WHERE user_id = ?;";
 
-        try (Connection connection = getConnection()) {
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
-            PreparedStatement ps = connection.prepareStatement(sql);
+
 
             ps.setString(1, profile.getFirstName());
             ps.setString(2, profile.getLastName());
@@ -112,10 +109,10 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
             ps.executeUpdate();
 
         }catch(SQLException sqlException){
-            sqlException.printStackTrace();
+            throw new RuntimeException("Failed to update profile.", sqlException);
         }
 
-        return null;
+        return profile;
 
     }
 
@@ -138,5 +135,6 @@ public class MySqlProfileDao extends MySqlDaoBase implements ProfileDao
         }
 
     }
+
 
 }

@@ -3,8 +3,6 @@ package org.yearup.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.yearup.data.ProfileDao;
@@ -31,7 +29,8 @@ public class ProfileController {
     @PostMapping("")
     @PreAuthorize("permitAll()")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public Profile createProfile(@RequestBody Profile profile) {
+    public Profile createProfile(@RequestBody Profile profile)
+    {
         try {
 
             profileDao.create(profile);
@@ -45,9 +44,39 @@ public class ProfileController {
 
     }
 
-    @GetMapping("{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
-    public Profile getById(@PathVariable int id, Authentication authentication) {
+    @GetMapping("users/{id}")
+    public Profile getById(Principal principal, @PathVariable int id)
+    {
+        try {
+            String userName = principal.getName();
+            User user = userDao.getByUserName(userName);
+            int userId = user.getId();
+
+            if (userId != id) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
+            }
+
+            var profile = profileDao.getById(id);
+
+            if (profile == null) {
+
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+            }
+
+            return profile;
+
+        } catch (Exception e) {
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+
+        }
+    }
+
+    @GetMapping("admins/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public Profile getByIdAdmin(@PathVariable int id)
+    {
         try {
 
             var profile = profileDao.getById(id);
@@ -67,37 +96,24 @@ public class ProfileController {
         }
     }
 
-//    @GetMapping("{id}")
-//    public Profile getById(@PathVariable int id, Authentication authentication) {
-//        User authenticatedUser = userDao.getUserById(id);
-//
-//        if (authenticatedUser != null) {
-//            boolean isAdmin = authenticatedUser.getAuthorities().stream()
-//                    .anyMatch(authority -> authority.getName().equals("ROLE_ADMIN"));
-//
-//            if (isAdmin || authenticatedUser.getId() == id) {
-//                Profile profile = profileDao.getById(id);
-//
-//                if (profile == null) {
-//                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-//                }
-//                return profile;
-//            } else {
-//                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this profile");
-//            }
-//        } else {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged in to access a profile");
-//        }
-//    }
-
-
-
-
-    @PutMapping("{id}")
-    @PreAuthorize("permitAll()")
-    public Profile updateProfile(@PathVariable int id, @RequestBody Profile profile)
+    @PutMapping("users/{id}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public Profile updateProfile(Principal principal, @PathVariable int id, @RequestBody Profile profile)
     {
         try{
+
+            String userName = principal.getName();
+            User user = userDao.getByUserName(userName);
+            int userId = user.getId();
+
+            if (userId != id) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
+            }
+
+            Profile existingProfile = profileDao.getById(id);
+            if (existingProfile == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found.");
+            }
 
             profileDao.updateProfile(id, profile);
 
@@ -111,9 +127,61 @@ public class ProfileController {
 
     }
 
-    @DeleteMapping("{id}")
-    @PreAuthorize("permitAll()")
-    public void deleteProfile(@PathVariable int id)
+    @PutMapping("admins/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ResponseStatus(value = HttpStatus.OK)
+    public Profile updateProfileAdmin(@PathVariable int id, @RequestBody Profile profile)
+    {
+        try{
+
+            Profile existingProfile = profileDao.getById(id);
+            if (existingProfile == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found.");
+            }
+
+            profileDao.updateProfile(id, profile);
+
+            return profile;
+
+        }catch(Exception e){
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+
+        }
+
+    }
+
+    @DeleteMapping("users/{id}")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    public void deleteProfile(Principal principal, @PathVariable int id)
+    {
+        try {
+            String userName = principal.getName();
+            User user = userDao.getByUserName(userName);
+            int userId = user.getId();
+
+            if (userId != id) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
+            }
+
+            var profile = profileDao.getById(id);
+
+            if (profile == null)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+            profileDao.deleteProfile(id);
+
+        }catch(Exception e){
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+
+        }
+    }
+
+    @DeleteMapping("admins/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    public void deleteProfileAdmin(@PathVariable int id)
     {
         try {
 
